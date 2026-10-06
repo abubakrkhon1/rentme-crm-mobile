@@ -1,0 +1,3 @@
+This is an Expo/React Native staff application. Use Expo Router with routes under `src/app`. Keep feature, component, API, and utility code outside the route tree. Use `npx expo install` for Expo dependencies. Do not create or edit native `ios` or `android` directories manually. Run lint and typecheck before declaring implementation work complete.
+
+The sibling `rentme-crm` repository is the source of truth for business rules, authorization, tenancy, and data contracts. Never place a Supabase service-role key in this app. Mobile mutations must use authorized CRM endpoints or tenant-safe RPCs rather than duplicating privileged Server Action logic.

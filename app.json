@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "RentMe CRM",
+    "slug": "rentme-crm-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "rentme-crm",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.rentmeorlando.crm"
+    },
+    "android": {
+      "package": "com.rentmeorlando.crm",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RentMe CRM to choose vehicle inspection photos.",
+          "cameraPermission": "Allow RentMe CRM to take vehicle inspection photos."
+        }
+      ],
+      "expo-image"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
