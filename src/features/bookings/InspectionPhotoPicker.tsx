@@ -6,6 +6,7 @@ import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { supabase } from "@/lib/supabase/client";
 import { colors } from "@/theme/colors";
+import { fonts } from "@/theme/fonts";
 
 export type PendingInspectionPhoto = {
   id: string;
@@ -139,7 +140,7 @@ export function InspectionPhotoPicker({ photos, onChange, disabled = false, requ
 }
 
 function PhotoAction({ icon, label, onPress, disabled }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; disabled: boolean }) {
-  return <Pressable accessibilityRole="button" onPress={onPress} disabled={disabled} style={({ pressed }) => [styles.action, (pressed || disabled) && styles.actionMuted]}><Ionicons name={icon} size={20} color={colors.brandDark} /><Text style={styles.actionText}>{label}</Text></Pressable>;
+  return <Pressable accessibilityRole="button" onPress={onPress} disabled={disabled} style={({ pressed }) => [styles.action, (pressed || disabled) && styles.actionMuted]}><Ionicons name={icon} size={20} color={colors.brand} /><Text style={styles.actionText}>{label}</Text></Pressable>;
 }
 
 function normalizeStoragePath(path: string) {
@@ -149,25 +150,25 @@ function normalizeStoragePath(path: string) {
 const styles = StyleSheet.create({
   wrap: { gap: 10, paddingTop: 3 },
   titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  label: { color: colors.ink, fontSize: 13, fontWeight: "900" },
+  label: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold },
   required: { color: colors.danger },
-  count: { color: colors.muted, fontSize: 11, fontWeight: "800" },
-  hint: { color: colors.muted, fontSize: 11, lineHeight: 16 },
+  count: { color: colors.muted, fontSize: 13, fontFamily: fonts.medium },
+  hint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
   actions: { flexDirection: "row", gap: 8 },
-  action: { flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.brandPale, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 8 },
+  action: { flex: 1, minHeight: 48, borderRadius: 10, backgroundColor: colors.brandSoft, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 8 },
   actionMuted: { opacity: 0.5 },
-  actionText: { color: colors.brandDark, fontSize: 11, fontWeight: "900" },
+  actionText: { color: colors.brand, fontSize: 14, fontFamily: fonts.bold },
   gallery: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingVertical: 2 },
   photoWrap: { position: "relative", width: "48%", flexGrow: 1, maxWidth: "49%" },
-  photo: { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: "#E5EAE8" },
+  photo: { width: "100%", aspectRatio: 1, borderRadius: 12, backgroundColor: colors.neutralSoft },
   placeholder: { alignItems: "center", justifyContent: "center" },
-  loadingText: { color: colors.muted, fontSize: 10, fontWeight: "700", marginTop: 5 },
+  loadingText: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium, marginTop: 5 },
   remove: { position: "absolute", right: 5, top: 5, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(20,30,27,.8)", alignItems: "center", justifyContent: "center" },
-  keptBadge: { position: "absolute", left: 5, bottom: 5, borderRadius: 6, backgroundColor: "rgba(16,94,72,.88)", paddingHorizontal: 6, paddingVertical: 3 },
-  keptText: { color: "#fff", fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
-  empty: { minHeight: 58, borderWidth: 1, borderStyle: "dashed", borderColor: colors.border, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  emptyText: { color: colors.muted, fontSize: 11, fontWeight: "700" },
-  error: { color: colors.danger, fontSize: 11, fontWeight: "800", lineHeight: 16 },
+  keptBadge: { position: "absolute", left: 5, bottom: 5, borderRadius: 6, backgroundColor: "rgba(20,24,31,.78)", paddingHorizontal: 6, paddingVertical: 3 },
+  keptText: { color: "#fff", fontSize: 10, fontFamily: fonts.bold, letterSpacing: 0.6 },
+  empty: { minHeight: 58, borderWidth: 1, borderStyle: "dashed", borderColor: colors.track, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  emptyText: { color: colors.muted, fontSize: 14, fontFamily: fonts.medium },
+  error: { color: colors.danger, fontSize: 13, fontFamily: fonts.medium, lineHeight: 18 },
   fullscreen: { flex: 1, backgroundColor: "rgba(0,0,0,.96)", alignItems: "center", justifyContent: "center" },
   fullscreenImage: { width: "100%", height: "100%" },
   fullscreenClose: { position: "absolute", zIndex: 2, top: 54, right: 18, width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,.16)", alignItems: "center", justifyContent: "center" },

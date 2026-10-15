@@ -1,6 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,10 +12,12 @@ export function Screen({
   scroll = true,
   refreshing = false,
   onRefresh,
-}: PropsWithChildren<{ header?: ReactNode; scroll?: boolean; refreshing?: boolean; onRefresh?: () => void | Promise<unknown> }>) {
+  contentStyle,
+  footer,
+}: PropsWithChildren<{ header?: ReactNode; footer?: ReactNode; scroll?: boolean; refreshing?: boolean; onRefresh?: () => void | Promise<unknown>; contentStyle?: StyleProp<ViewStyle> }>) {
   const queryClient = useQueryClient();
   const [internalRefreshing, setInternalRefreshing] = useState(false);
-  const content = <View style={styles.content}>{children}</View>;
+  const content = <View style={[styles.content, contentStyle]}>{children}</View>;
   async function refresh() {
     setInternalRefreshing(true);
     try {
@@ -29,6 +31,7 @@ export function Screen({
     <SafeAreaView style={styles.safe} edges={["top"]}>
       {header}
       {scroll ? <ScrollView contentContainerStyle={styles.scroll} alwaysBounceVertical refreshControl={<RefreshControl refreshing={refreshing || internalRefreshing} onRefresh={() => void refresh()} tintColor={colors.brand} colors={[colors.brand]} />}>{content}</ScrollView> : content}
+      {footer}
     </SafeAreaView>
   );
 }
@@ -36,5 +39,5 @@ export function Screen({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1 },
-  content: { flex: 1, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 30, gap: 18 },
+  content: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, gap: 16 },
 });

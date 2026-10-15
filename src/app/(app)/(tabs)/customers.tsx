@@ -1,14 +1,19 @@
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import { CustomerCard } from "@/components/customers/CustomerCard";
+import { Group, GroupLabel } from "@/components/ui/Group";
+import { LargeTitle } from "@/components/ui/LargeTitle";
+import { RoundButton } from "@/components/ui/RoundButton";
 import { Screen } from "@/components/ui/Screen";
+import { SearchField } from "@/components/ui/SearchField";
 import { ErrorView, ScreenSkeleton } from "@/components/ui/StateView";
 import { useCustomers } from "@/features/customers/useCustomers";
-import { colors } from "@/theme/colors";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { colors } from "@/theme/colors";
+import { fonts } from "@/theme/fonts";
 
 export default function CustomersScreen() {
   const [search, setSearch] = useState("");
@@ -16,11 +21,44 @@ export default function CustomersScreen() {
   if (customers.isLoading) return <ScreenSkeleton variant="list" />;
   if (customers.isError) return <ErrorView message={customers.error.message} onRetry={() => void customers.refetch()} />;
   const items = customers.data?.items ?? [];
+  const owing = items.filter((customer) => customer.balance > 0);
   const balances = items.reduce((sum, customer) => sum + Math.max(customer.balance, 0), 0);
 
-  return <Screen><View style={styles.header}><View><Text style={styles.eyebrow}>RELATIONSHIPS</Text><Text style={styles.title}>Customers</Text></View><Pressable style={styles.addButton}><Ionicons name="add" size={20} color="#fff" /><Text style={styles.addText}>Add</Text></Pressable></View><View style={styles.hero}><View style={styles.heroGlow} /><Text style={styles.heroLabel}>CUSTOMER OVERVIEW</Text><Text style={styles.heroTitle}>{items.length} customers</Text><Text style={styles.heroCopy}>Profiles and rental relationships at a glance.</Text><View style={styles.heroStats}><HeroStat value={`${items.filter((item) => item.balance > 0).length}`} label="With balance" /><View style={styles.heroDivider} /><HeroStat value={money(balances)} label="Outstanding" /><View style={styles.heroDivider} /><HeroStat value={`${items.filter((item) => item.balance <= 0).length}`} label="Clear" /></View></View><View style={styles.searchWrap}><Ionicons name="search" size={19} color={colors.subtle} /><TextInput value={search} onChangeText={setSearch} placeholder="Search customers…" placeholderTextColor={colors.subtle} style={styles.search} /></View><View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Directory</Text><Text style={styles.sectionCount}>{items.length}</Text></View><View style={styles.list}>{items.length ? items.map((customer) => <CustomerCard key={customer.id} customer={customer} onPress={() => router.push(`/customers/${customer.id}`)} />) : <View style={styles.empty}><Ionicons name="people-outline" size={28} color={colors.brandDark} /><Text style={styles.emptyTitle}>No customers found</Text><Text style={styles.emptyCopy}>Try a different name, email, or phone number.</Text></View>}</View></Screen>;
+  return (
+    <Screen>
+      <LargeTitle title="Customers" right={<RoundButton icon="add" label="Add customer" />} />
+      <SearchField value={search} onChangeText={setSearch} placeholder="Name, phone or email" />
+      <View style={styles.stats}>
+        <View style={styles.stat}><Text style={styles.statLabel}>Outstanding</Text><Text style={[styles.statValue, balances > 0 && styles.owing]}>{money(balances)}</Text></View>
+        <View style={styles.stat}><Text style={styles.statLabel}>With balance</Text><Text style={styles.statValue}>{owing.length} of {items.length}</Text></View>
+      </View>
+      <View>
+        <GroupLabel>Directory · {items.length}</GroupLabel>
+        {items.length ? (
+          <Group inset={66}>
+            {items.map((customer) => <CustomerCard key={customer.id} customer={customer} onPress={() => router.push(`/customers/${customer.id}`)} />)}
+          </Group>
+        ) : (
+          <View style={styles.empty}>
+            <Ionicons name="people-outline" size={28} color={colors.muted} />
+            <Text style={styles.emptyTitle}>No customers found</Text>
+            <Text style={styles.emptyCopy}>Try a different name, email, or phone number.</Text>
+          </View>
+        )}
+      </View>
+    </Screen>
+  );
 }
 
-function HeroStat({ value, label }: { value: string; label: string }) { return <View style={styles.heroStat}><Text style={styles.heroValue}>{value}</Text><Text style={styles.heroStatLabel}>{label}</Text></View>; }
 function money(value: number) { return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
-const styles = StyleSheet.create({ header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, eyebrow: { color: colors.brand, fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }, title: { color: colors.ink, fontSize: 30, lineHeight: 35, fontWeight: "900", letterSpacing: -0.8 }, addButton: { height: 40, borderRadius: 13, paddingHorizontal: 14, backgroundColor: colors.brand, flexDirection: "row", alignItems: "center", gap: 4 }, addText: { color: "#fff", fontWeight: "800" }, hero: { minHeight: 174, borderRadius: 24, padding: 19, backgroundColor: colors.brand, overflow: "hidden" }, heroGlow: { position: "absolute", width: 160, height: 160, borderRadius: 80, right: -38, top: -65, backgroundColor: "rgba(255,255,255,0.09)" }, heroLabel: { color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, heroTitle: { color: "#fff", fontSize: 25, fontWeight: "900", marginTop: 6 }, heroCopy: { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 2 }, heroStats: { flexDirection: "row", marginTop: 18, paddingTop: 13, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "rgba(255,255,255,0.35)" }, heroStat: { flex: 1, alignItems: "center", gap: 2 }, heroValue: { color: "#fff", fontSize: 17, fontWeight: "900" }, heroStatLabel: { color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: "700" }, heroDivider: { width: StyleSheet.hairlineWidth, height: 27, backgroundColor: "rgba(255,255,255,0.35)" }, searchWrap: { minHeight: 48, backgroundColor: "#EEF2F1", borderRadius: 15, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 9 }, search: { flex: 1, fontSize: 15, color: colors.ink }, sectionHeading: { flexDirection: "row", alignItems: "center", gap: 7 }, sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" }, sectionCount: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.brandSoft, color: colors.brandDark, textAlign: "center", lineHeight: 22, fontSize: 11, fontWeight: "900" }, list: { gap: 10 }, empty: { minHeight: 180, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 8 }, emptyTitle: { color: colors.ink, fontWeight: "900", fontSize: 15 }, emptyCopy: { color: colors.muted, fontSize: 12 } });
+
+const styles = StyleSheet.create({
+  stats: { flexDirection: "row", gap: 10 },
+  stat: { flex: 1, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, paddingVertical: 10 },
+  statLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium },
+  statValue: { color: colors.ink, fontSize: 20, fontFamily: fonts.bold, marginTop: 1 },
+  owing: { color: colors.danger },
+  empty: { minHeight: 180, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 6, padding: 24 },
+  emptyTitle: { color: colors.ink, fontSize: 16, fontFamily: fonts.bold },
+  emptyCopy: { color: colors.muted, fontSize: 14, textAlign: "center" },
+});

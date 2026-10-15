@@ -11,11 +11,11 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: VehicleSummary; onP
 
 export function statusLabel(status: VehicleStatus) { return status.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 export function statusTone(status: VehicleStatus) {
-  if (status === "available") return { background: "#DDF9E9", text: "#087A46" };
-  if (status === "rented") return { background: "#DDEEFF", text: "#1769AA" };
-  if (status === "maintenance" || status === "out_of_order") return { background: "#FFF1D6", text: "#A15C00" };
-  return { background: "#EEF0F2", text: "#59636E" };
+  if (status === "available") return { background: colors.successSoft, text: colors.success };
+  if (status === "rented") return { background: colors.brandSoft, text: colors.brand };
+  if (status === "maintenance" || status === "out_of_order") return { background: colors.warningSoft, text: colors.warning };
+  return { background: colors.neutralSoft, text: colors.neutralText };
 }
 export function money(value: number | null) { return value == null ? "—" : new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
 
-const styles = StyleSheet.create({ card: { minHeight: 108, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 11, flexDirection: "row", alignItems: "center", gap: 11 }, image: { width: 84, height: 72, borderRadius: 13, backgroundColor: colors.brandPale }, placeholder: { width: 84, height: 72, borderRadius: 13, backgroundColor: colors.brandPale, alignItems: "center", justifyContent: "center" }, main: { flex: 1, gap: 5 }, name: { color: colors.ink, fontWeight: "900", fontSize: 14 }, meta: { color: colors.muted, fontSize: 10 }, status: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }, dot: { width: 5, height: 5, borderRadius: 3 }, statusText: { fontSize: 9, fontWeight: "900" }, rate: { alignItems: "flex-end" }, price: { color: colors.ink, fontSize: 13, fontWeight: "900" }, per: { color: colors.subtle, fontSize: 9 }, pressed: { opacity: 0.65 } });
+const styles = StyleSheet.create({ card: { minHeight: 108, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 12, flexDirection: "row", alignItems: "center", gap: 11 }, image: { width: 84, height: 72, borderRadius: 13, backgroundColor: colors.brandPale }, placeholder: { width: 84, height: 72, borderRadius: 13, backgroundColor: colors.brandPale, alignItems: "center", justifyContent: "center" }, main: { flex: 1, gap: 5 }, name: { color: colors.ink, fontFamily: "AirbnbCereal-Bold", fontSize: 16 }, meta: { color: colors.muted, fontSize: 13 }, status: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }, dot: { width: 5, height: 5, borderRadius: 3 }, statusText: { fontSize: 12, fontFamily: "AirbnbCereal-Bold" }, rate: { alignItems: "flex-end" }, price: { color: colors.ink, fontSize: 15, fontFamily: "AirbnbCereal-Bold" }, per: { color: colors.muted, fontSize: 12 }, pressed: { opacity: 0.7 } });

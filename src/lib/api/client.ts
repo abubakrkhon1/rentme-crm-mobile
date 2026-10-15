@@ -1,6 +1,7 @@
 import { getPublicEnv } from "@/lib/env";
 import { supabase } from "@/lib/supabase/client";
 import type { ApiErrorBody } from "@/lib/api/types";
+import { getActiveWorkspaceId, setActiveWorkspaceId } from "@/features/workspace/activeWorkspace";
 
 export class ApiError extends Error {
   constructor(
@@ -12,10 +13,18 @@ export class ApiError extends Error {
   }
 }
 
+async function clearInvalidSession() {
+  // A 401 from the CRM means the server rejected this access token. Remove the
+  // local session so AuthProvider routes the user back to sign-in instead of
+  // retrying protected requests with the same token.
+  setActiveWorkspaceId(null);
+  await supabase.auth.signOut({ scope: "local" });
+}
+
 async function getValidAccessToken(): Promise<string> {
   const { data, error } = await supabase.auth.getSession();
   if (error) {
-    await supabase.auth.signOut({ scope: "local" });
+    await clearInvalidSession();
     throw new ApiError("Your session has expired. Please sign in again.", 401, "UNAUTHENTICATED");
   }
 
@@ -25,7 +34,7 @@ async function getValidAccessToken(): Promise<string> {
     const refreshed = await supabase.auth.refreshSession();
     session = refreshed.data.session;
     if (refreshed.error || !session) {
-      await supabase.auth.signOut({ scope: "local" });
+      await clearInvalidSession();
       throw new ApiError("Your session has expired. Please sign in again.", 401, "UNAUTHENTICATED");
     }
   }
@@ -44,6 +53,7 @@ export async function apiRequest<T>(
 
   const baseUrl = getPublicEnv().EXPO_PUBLIC_CRM_API_URL.replace(/\/$/, "");
   const requestUrl = `${baseUrl}${path}`;
+  const activeWorkspaceId = getActiveWorkspaceId();
   let response: Response;
 
   try {
@@ -55,6 +65,7 @@ export async function apiRequest<T>(
         // Prevent ngrok's browser-warning HTML from replacing API responses in development.
         "ngrok-skip-browser-warning": "true",
         Authorization: `Bearer ${token}`,
+        ...(activeWorkspaceId ? { "x-organization-id": activeWorkspaceId } : {}),
         ...init.headers,
       },
     });
@@ -66,14 +77,6 @@ export async function apiRequest<T>(
     );
   }
 
-  if (response.status === 404) {
-    throw new ApiError(
-      "This mobile API endpoint has not been deployed to the CRM yet.",
-      404,
-      "ENDPOINT_NOT_DEPLOYED",
-    );
-  }
-
   if (!response.ok) {
     let body: ApiErrorBody = {};
     try {
@@ -81,10 +84,22 @@ export async function apiRequest<T>(
     } catch {
       // Preserve a stable fallback when a proxy returns a non-JSON error page.
     }
+    const apiCode = body.error?.code;
+    const isMissingEndpoint = response.status === 404 && !apiCode;
+    if (response.status === 401) {
+      await clearInvalidSession();
+      throw new ApiError(
+        "Your session has expired. Please sign in again.",
+        401,
+        apiCode ?? "UNAUTHENTICATED",
+      );
+    }
     throw new ApiError(
-      body.error?.message ?? body.message ?? "The request could not be completed.",
+      body.error?.message ?? body.message ?? (isMissingEndpoint
+        ? "This mobile API endpoint has not been deployed to the CRM yet."
+        : "The request could not be completed."),
       response.status,
-      body.error?.code ?? "REQUEST_FAILED",
+      apiCode ?? (isMissingEndpoint ? "ENDPOINT_NOT_DEPLOYED" : "REQUEST_FAILED"),
     );
   }
 

@@ -5,11 +5,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
 
 import { supabase } from "@/lib/supabase/client";
+import { queryClient } from "@/lib/query/client";
+import { setActiveWorkspaceId } from "@/features/workspace/activeWorkspace";
 
 type AuthContextValue = {
   session: Session | null;
@@ -23,14 +26,22 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const currentUserId = useRef<string | null>(null);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
+      currentUserId.current = data.session?.user.id ?? null;
       setSession(data.session);
       setIsLoading(false);
     });
 
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      const nextUserId = nextSession?.user.id ?? null;
+      if (event === "SIGNED_OUT" || (currentUserId.current && nextUserId !== currentUserId.current)) {
+        setActiveWorkspaceId(null);
+        queryClient.clear();
+      }
+      currentUserId.current = nextUserId;
       setSession(nextSession);
       setIsLoading(false);
     });
@@ -44,6 +55,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const signOut = useCallback(async () => {
+    setActiveWorkspaceId(null);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);

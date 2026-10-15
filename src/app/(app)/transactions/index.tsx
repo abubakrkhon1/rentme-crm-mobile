@@ -1,13 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import { money, TransactionCard } from "@/components/transactions/TransactionCard";
+import { Group, GroupLabel } from "@/components/ui/Group";
+import { LargeTitle } from "@/components/ui/LargeTitle";
+import { NavBar } from "@/components/ui/NavBar";
 import { Screen } from "@/components/ui/Screen";
+import { SearchField } from "@/components/ui/SearchField";
+import { Segmented } from "@/components/ui/Segmented";
 import { ErrorView, ScreenSkeleton } from "@/components/ui/StateView";
+import { money, TransactionCard } from "@/components/transactions/TransactionCard";
 import { type TransactionFilter, useTransactions } from "@/features/transactions/useTransactions";
 import { colors } from "@/theme/colors";
+import { fonts } from "@/theme/fonts";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 const filters: { label: string; value: TransactionFilter }[] = [{ label: "All", value: "all" }, { label: "Payments", value: "payment" }, { label: "Charges", value: "charge" }, { label: "Refunds", value: "refund" }];
@@ -20,8 +25,34 @@ export default function TransactionsScreen() {
   if (transactions.isError) return <ErrorView message={transactions.error.message} onRetry={() => void transactions.refetch()} />;
   const items = transactions.data?.items ?? [];
   const stats = transactions.data?.stats ?? { revenue: 0, depositsHeld: 0, outstanding: 0, refunded: 0 };
-  return <Screen><View style={styles.header}><Pressable style={styles.back} onPress={() => router.back()}><Ionicons name="chevron-back" size={22} color={colors.ink} /></Pressable><View style={styles.heading}><Text style={styles.eyebrow}>FINANCE</Text><Text style={styles.title}>Transactions</Text></View><View style={styles.back} /></View><View style={styles.hero}><View style={styles.glow} /><Text style={styles.heroLabel}>PAYMENT OVERVIEW</Text><Text style={styles.heroValue}>{money(stats.revenue)}</Text><Text style={styles.heroCopy}>Revenue from completed payments</Text><View style={styles.stats}><HeroStat value={money(stats.outstanding)} label="Outstanding" /><Divider /><HeroStat value={money(stats.depositsHeld)} label="Deposits held" /><Divider /><HeroStat value={money(stats.refunded)} label="Refunded" /></View></View><View style={styles.searchWrap}><Ionicons name="search" size={19} color={colors.subtle} /><TextInput value={search} onChangeText={setSearch} placeholder="Search transactions…" placeholderTextColor={colors.subtle} style={styles.search} /></View><View style={styles.filters}>{filters.map((filter) => <Pressable key={filter.value} onPress={() => setType(filter.value)} style={[styles.filter, type === filter.value && styles.filterActive]}><Text style={[styles.filterText, type === filter.value && styles.filterTextActive]}>{filter.label}</Text></Pressable>)}</View><View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Activity</Text><Text style={styles.count}>{items.length}</Text></View><View style={styles.list}>{items.length ? items.map((item) => <TransactionCard key={item.id} transaction={item} />) : <View style={styles.empty}><Ionicons name="receipt-outline" size={29} color={colors.brandDark} /><Text style={styles.emptyTitle}>No transactions found</Text><Text style={styles.emptyCopy}>Try another title or transaction type.</Text></View>}</View></Screen>;
+  return <Screen>
+    <NavBar backLabel="More" />
+    <LargeTitle title="Transactions" />
+    <View style={styles.summary}>
+      <Text style={styles.summaryLabel}>Revenue from completed payments</Text>
+      <Text style={styles.summaryValue}>{money(stats.revenue)}</Text>
+      <View style={styles.stats}><Stat value={money(stats.outstanding)} label="Outstanding" tone={stats.outstanding > 0 ? "danger" : undefined} /><View style={styles.divider} /><Stat value={money(stats.depositsHeld)} label="Deposits held" /><View style={styles.divider} /><Stat value={money(stats.refunded)} label="Refunded" /></View>
+    </View>
+    <SearchField value={search} onChangeText={setSearch} placeholder="Search transactions" />
+    <Segmented options={filters} value={type} onChange={setType} />
+    <View style={styles.section}>
+      <GroupLabel>Activity · {items.length}</GroupLabel>
+      {items.length ? <Group inset={16}>{items.map((item) => <TransactionCard key={item.id} transaction={item} />)}</Group> : <View style={styles.empty}><Ionicons name="receipt-outline" size={28} color={colors.subtle} /><Text style={styles.emptyTitle}>No transactions found</Text><Text style={styles.emptyCopy}>Try another title or transaction type.</Text></View>}
+    </View>
+  </Screen>;
 }
-function HeroStat({ value, label }: { value: string; label: string }) { return <View style={styles.stat}><Text style={styles.statValue} numberOfLines={1}>{value}</Text><Text style={styles.statLabel}>{label}</Text></View>; }
-function Divider() { return <View style={styles.divider} />; }
-const styles = StyleSheet.create({ header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, back: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }, heading: { alignItems: "center" }, eyebrow: { color: colors.brand, fontSize: 9, fontWeight: "900", letterSpacing: 1.1 }, title: { color: colors.ink, fontSize: 23, fontWeight: "900" }, hero: { minHeight: 188, borderRadius: 24, padding: 19, backgroundColor: colors.brand, overflow: "hidden" }, glow: { position: "absolute", width: 170, height: 170, borderRadius: 85, right: -40, top: -70, backgroundColor: "rgba(255,255,255,0.09)" }, heroLabel: { color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, heroValue: { color: "#fff", fontSize: 28, fontWeight: "900", marginTop: 6 }, heroCopy: { color: "rgba(255,255,255,0.78)", fontSize: 11 }, stats: { flexDirection: "row", marginTop: 17, paddingTop: 13, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "rgba(255,255,255,0.35)" }, stat: { flex: 1, alignItems: "center", gap: 2 }, statValue: { color: "#fff", fontSize: 13, fontWeight: "900", maxWidth: "96%" }, statLabel: { color: "rgba(255,255,255,0.7)", fontSize: 8, fontWeight: "700" }, divider: { width: StyleSheet.hairlineWidth, height: 27, backgroundColor: "rgba(255,255,255,0.35)" }, searchWrap: { minHeight: 48, backgroundColor: "#EEF2F1", borderRadius: 15, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 9 }, search: { flex: 1, fontSize: 15, color: colors.ink }, filters: { flexDirection: "row", gap: 7 }, filter: { flex: 1, minHeight: 34, borderRadius: 11, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }, filterActive: { backgroundColor: colors.brand, borderColor: colors.brand }, filterText: { color: colors.muted, fontWeight: "800", fontSize: 9 }, filterTextActive: { color: "#fff" }, sectionHeading: { flexDirection: "row", alignItems: "center", gap: 7 }, sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" }, count: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.brandSoft, color: colors.brandDark, textAlign: "center", lineHeight: 22, fontSize: 11, fontWeight: "900" }, list: { gap: 10 }, empty: { minHeight: 180, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 8 }, emptyTitle: { color: colors.ink, fontWeight: "900", fontSize: 15 }, emptyCopy: { color: colors.muted, fontSize: 12 } });
+function Stat({ value, label, tone }: { value: string; label: string; tone?: "danger" }) { return <View style={styles.stat}><Text style={[styles.statValue, tone === "danger" && { color: colors.danger }]} numberOfLines={1}>{value}</Text><Text style={styles.statLabel}>{label}</Text></View>; }
+const styles = StyleSheet.create({
+  summary: { backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, borderRadius: 16, padding: 16 },
+  summaryLabel: { color: colors.muted, fontSize: 13, fontFamily: fonts.medium },
+  summaryValue: { color: colors.ink, fontSize: 32, fontFamily: fonts.bold, marginTop: 2, letterSpacing: -0.5 },
+  stats: { flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  stat: { flex: 1, alignItems: "center", gap: 2 },
+  statValue: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold, maxWidth: "96%" },
+  statLabel: { color: colors.muted, fontSize: 11, fontFamily: fonts.medium },
+  divider: { width: StyleSheet.hairlineWidth, height: 28, backgroundColor: colors.border },
+  section: { gap: 6 },
+  empty: { minHeight: 160, borderRadius: 16, backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 6 },
+  emptyTitle: { color: colors.ink, fontFamily: fonts.bold, fontSize: 16 },
+  emptyCopy: { color: colors.muted, fontSize: 13 },
+});

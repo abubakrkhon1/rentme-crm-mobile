@@ -25,6 +25,27 @@ export type MobileSession = {
   capabilities: Capability[];
 };
 
+export type OrganizationSettings = {
+  id: string;
+  name: string;
+  slug: string;
+  legalName: string | null;
+  status: "onboarding" | "trial" | "active";
+  role: StaffRole;
+  timezone: string;
+  currencyCode: string;
+  countryCode: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  websiteUrl: string | null;
+  bookingUrl: string | null;
+  logoUrl: string | null;
+  hostname: string | null;
+};
+
+export type OrganizationSettingsResponse = { organization: OrganizationSettings; organizations: OrganizationSettings[]; canManage: boolean };
+export type OrganizationSettingsInput = Pick<OrganizationSettings, "name" | "legalName" | "contactEmail" | "contactPhone" | "websiteUrl" | "bookingUrl" | "timezone" | "currencyCode">;
+
 export type BookingSummary = {
   id: string;
   customerName: string;
@@ -49,6 +70,30 @@ export type BookingListResponse = {
   nextCursor: string | null;
 };
 
+export type NewBookingSetup = {
+  bookingId: string;
+  vehicles: { id: string; name: string; plateNumber: string | null; dailyRate: number; odometer: number | null; status: string }[];
+  admins: { id: string; name: string; role: string }[];
+  defaultDeposit: number;
+};
+
+export type NewBookingPayload = { booking: Record<string, unknown>; inspection: InspectionInput };
+
+export type FinishBookingSetup = {
+  booking: { id: string; car_id: string; car_name: string; first_name: string; last_name: string; pickup_date: string; return_date: string; status: string };
+  pickupInspection: { fuel_level: number; odometer_miles: number; allowed_miles: number | null } | null;
+};
+
+export type FinishBookingPayload = {
+  returnFuelLevel: number;
+  returnOdometerMiles: number;
+  exteriorCondition: string;
+  interiorCondition: string;
+  damageNotes: string;
+  generalNotes: string;
+  photoPaths: string[];
+};
+
 export type BookingDetail = {
   id: string;
   customer: { name: string; email: string | null; phone: string | null; driverLicense: string | null };
@@ -71,19 +116,24 @@ export type BookingDetail = {
 
 export type BookingOverview = {
   customerId: string | null;
-  balanceSummary: {
-    rentalBalanceOwed: number;
-    customerCredit: number;
-    requiredDeposit: number;
-    collectedDeposit: number;
-    appliedDeposit: number;
-    refundedDeposit: number;
-    refundableBalance: number;
-    requiredRemaining: number;
-    depositStatus: string;
-  };
   transactions: BookingTransaction[];
 };
+
+export type BalanceSummary = {
+  rentalBalanceOwed: number;
+  customerCredit: number;
+  requiredDeposit: number;
+  collectedDeposit: number;
+  appliedDeposit: number;
+  refundedDeposit: number;
+  refundableBalance: number;
+  requiredRemaining: number;
+  depositStatus: string;
+};
+
+export type CustomerOverview = { balanceSummary: BalanceSummary; transactions: BookingTransaction[] };
+export type CustomerTransactions = { transactions: BookingTransaction[] };
+export type CustomerDocuments = { documents: CustomerDocumentSummary[] };
 
 export type BookingDocuments = {
   documents: CustomerDocumentSummary[];
@@ -110,6 +160,11 @@ export type CustomerSummary = {
 };
 
 export type CustomerListResponse = { items: CustomerSummary[]; nextCursor: string | null };
+
+export type MessageConversationSummary = { id: string; customerId: string; bookingId: string | null; customerName: string; email: string | null; phone: string | null; appMessagingAvailable: boolean; lastMessageAt: string; lastMessagePreview: string | null; unreadCount: number };
+export type MessageConversationList = { items: MessageConversationSummary[]; unreadCount: number };
+export type ConversationMessage = { id: string; senderType: "admin" | "customer" | "system"; channel: "app" | "sms"; direction: "inbound" | "outbound"; body: string; deliveryStatus: string; errorMessage: string | null; createdAt: string; deliveredAt: string | null; readAt: string | null };
+export type MessageConversationDetail = { conversation: { id: string; customerId: string; customerName: string; email: string | null; phone: string | null; appMessagingAvailable: boolean }; messages: ConversationMessage[] };
 
 export type CustomerDetail = CustomerSummary & {
   driverLicense: string | null;

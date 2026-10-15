@@ -1,16 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { VehicleCard } from "@/components/fleet/VehicleCard";
+import { GroupLabel } from "@/components/ui/Group";
+import { LargeTitle } from "@/components/ui/LargeTitle";
+import { NavBar } from "@/components/ui/NavBar";
 import { Screen } from "@/components/ui/Screen";
+import { SearchField } from "@/components/ui/SearchField";
+import { Segmented } from "@/components/ui/Segmented";
 import { ErrorView, ScreenSkeleton } from "@/components/ui/StateView";
 import { type FleetFilter, useFleet } from "@/features/fleet/useFleet";
 import { colors } from "@/theme/colors";
+import { fonts } from "@/theme/fonts";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
-const filters: { label: string; value: FleetFilter }[] = [{ label: "All", value: "all" }, { label: "Available", value: "available" }, { label: "Rented", value: "rented" }, { label: "Maintenance", value: "maintenance" }];
+const filters: { label: string; value: FleetFilter }[] = [{ label: "All", value: "all" }, { label: "Available", value: "available" }, { label: "Rented", value: "rented" }, { label: "Service", value: "maintenance" }];
 
 export default function FleetScreen() {
   const [search, setSearch] = useState("");
@@ -21,8 +27,28 @@ export default function FleetScreen() {
   const data = fleet.data;
   const items = data?.items ?? [];
   const stats = data?.stats ?? { total: 0, available: 0, rented: 0, maintenance: 0 };
-  return <Screen><View style={styles.header}><Pressable style={styles.back} onPress={() => router.back()}><Ionicons name="chevron-back" size={22} color={colors.ink} /></Pressable><View style={styles.heading}><Text style={styles.eyebrow}>OPERATIONS</Text><Text style={styles.title}>Fleet</Text></View><View style={styles.back} /></View><View style={styles.hero}><View style={styles.glow} /><Text style={styles.heroLabel}>FLEET OVERVIEW</Text><Text style={styles.heroTitle}>{stats.total} vehicles</Text><Text style={styles.heroCopy}>Availability, rentals, and maintenance in one place.</Text><View style={styles.heroStats}><HeroStat value={stats.available} label="Available" /><Divider /><HeroStat value={stats.rented} label="Rented" /><Divider /><HeroStat value={stats.maintenance} label="Service" /></View></View><View style={styles.searchWrap}><Ionicons name="search" size={19} color={colors.subtle} /><TextInput value={search} onChangeText={setSearch} placeholder="Search vehicles…" placeholderTextColor={colors.subtle} style={styles.search} /></View><View style={styles.filters}>{filters.map((filter) => <Pressable key={filter.value} onPress={() => setStatus(filter.value)} style={[styles.filter, status === filter.value && styles.filterActive]}><Text style={[styles.filterText, status === filter.value && styles.filterTextActive]}>{filter.label}</Text></Pressable>)}</View><View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Vehicles</Text><Text style={styles.count}>{items.length}</Text></View><View style={styles.list}>{items.length ? items.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} onPress={() => router.push(`/fleet/${vehicle.id}`)} />) : <View style={styles.empty}><Ionicons name="car-sport-outline" size={30} color={colors.brandDark} /><Text style={styles.emptyTitle}>No vehicles found</Text><Text style={styles.emptyCopy}>Try a different search or status.</Text></View>}</View></Screen>;
+  return <Screen>
+    <NavBar backLabel="More" />
+    <LargeTitle title="Fleet" subtitle={`${stats.total} vehicles`} />
+    <View style={styles.stats}><Stat value={stats.available} label="Available" /><View style={styles.divider} /><Stat value={stats.rented} label="Rented" /><View style={styles.divider} /><Stat value={stats.maintenance} label="Service" /></View>
+    <SearchField value={search} onChangeText={setSearch} placeholder="Search vehicles" />
+    <Segmented options={filters} value={status} onChange={setStatus} />
+    <View style={styles.section}>
+      <GroupLabel>Vehicles · {items.length}</GroupLabel>
+      <View style={styles.list}>{items.length ? items.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} onPress={() => router.push(`/fleet/${vehicle.id}`)} />) : <View style={styles.empty}><Ionicons name="car-sport-outline" size={28} color={colors.subtle} /><Text style={styles.emptyTitle}>No vehicles found</Text><Text style={styles.emptyCopy}>Try a different search or status.</Text></View>}</View>
+    </View>
+  </Screen>;
 }
-function HeroStat({ value, label }: { value: number; label: string }) { return <View style={styles.heroStat}><Text style={styles.heroValue}>{value}</Text><Text style={styles.heroStatLabel}>{label}</Text></View>; }
-function Divider() { return <View style={styles.divider} />; }
-const styles = StyleSheet.create({ header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, back: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }, heading: { alignItems: "center" }, eyebrow: { color: colors.brand, fontSize: 9, fontWeight: "900", letterSpacing: 1.1 }, title: { color: colors.ink, fontSize: 25, fontWeight: "900" }, hero: { minHeight: 174, borderRadius: 24, padding: 19, backgroundColor: colors.brand, overflow: "hidden" }, glow: { position: "absolute", width: 160, height: 160, borderRadius: 80, right: -38, top: -65, backgroundColor: "rgba(255,255,255,0.09)" }, heroLabel: { color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, heroTitle: { color: "#fff", fontSize: 25, fontWeight: "900", marginTop: 6 }, heroCopy: { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 2 }, heroStats: { flexDirection: "row", marginTop: 18, paddingTop: 13, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "rgba(255,255,255,0.35)" }, heroStat: { flex: 1, alignItems: "center", gap: 2 }, heroValue: { color: "#fff", fontSize: 17, fontWeight: "900" }, heroStatLabel: { color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: "700" }, divider: { width: StyleSheet.hairlineWidth, height: 27, backgroundColor: "rgba(255,255,255,0.35)" }, searchWrap: { minHeight: 48, backgroundColor: "#EEF2F1", borderRadius: 15, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 9 }, search: { flex: 1, fontSize: 15, color: colors.ink }, filters: { flexDirection: "row", gap: 7 }, filter: { flex: 1, minHeight: 34, borderRadius: 11, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }, filterActive: { backgroundColor: colors.brand, borderColor: colors.brand }, filterText: { color: colors.muted, fontWeight: "800", fontSize: 9 }, filterTextActive: { color: "#fff" }, sectionHeading: { flexDirection: "row", alignItems: "center", gap: 7 }, sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" }, count: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.brandSoft, color: colors.brandDark, textAlign: "center", lineHeight: 22, fontSize: 11, fontWeight: "900" }, list: { gap: 10 }, empty: { minHeight: 180, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 8 }, emptyTitle: { color: colors.ink, fontWeight: "900", fontSize: 15 }, emptyCopy: { color: colors.muted, fontSize: 12 } });
+function Stat({ value, label }: { value: number; label: string }) { return <View style={styles.stat}><Text style={styles.statValue}>{value}</Text><Text style={styles.statLabel}>{label}</Text></View>; }
+const styles = StyleSheet.create({
+  stats: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, borderRadius: 16, paddingVertical: 14 },
+  stat: { flex: 1, alignItems: "center", gap: 2 },
+  statValue: { color: colors.ink, fontSize: 22, fontFamily: fonts.bold },
+  statLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium },
+  divider: { width: StyleSheet.hairlineWidth, height: 32, backgroundColor: colors.border },
+  section: { gap: 6 },
+  list: { gap: 10 },
+  empty: { minHeight: 160, borderRadius: 16, backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 6 },
+  emptyTitle: { color: colors.ink, fontFamily: fonts.bold, fontSize: 16 },
+  emptyCopy: { color: colors.muted, fontSize: 13 },
+});

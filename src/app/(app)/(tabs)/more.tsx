@@ -1,11 +1,86 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Button } from "@/components/ui/Button";
+
+import { Avatar } from "@/components/ui/Avatar";
+import { Group, GroupLabel } from "@/components/ui/Group";
+import { LargeTitle } from "@/components/ui/LargeTitle";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useMobileSession } from "@/features/workspace/useMobileSession";
 import { colors } from "@/theme/colors";
-export default function MoreScreen() { const { signOut } = useAuth(); const session = useMobileSession(); const identity = session.data?.user.fullName ?? session.data?.user.email ?? "Staff member"; return <Screen><View><Text style={styles.eyebrow}>ACCOUNT & SETTINGS</Text><Text style={styles.title}>More</Text></View><View style={styles.profile}><View style={styles.heroGlow} /><View style={styles.avatar}><Text style={styles.avatarText}>{identity.slice(0, 2).toUpperCase()}</Text></View><View style={styles.profileText}><Text style={styles.name}>{identity}</Text><Text style={styles.copy}>{session.data?.activeWorkspace.role} · {session.data?.activeWorkspace.name}</Text></View><View style={styles.activePill}><View style={styles.activeDot} /><Text style={styles.activeText}>Active</Text></View></View><Text style={styles.sectionTitle}>Workspace</Text><View style={styles.menu}><MenuRow icon="business-outline" label="Organization" detail="Workspace and business settings" /><MenuRow icon="notifications-outline" label="Notifications" detail="Push and email preferences" /><MenuRow icon="card-outline" label="Transactions & payments" detail="Revenue, charges, deposits, and refunds" onPress={() => router.push("/transactions")} /><MenuRow icon="car-sport-outline" label="Fleet & vehicles" detail="Availability, rates, and telemetry" onPress={() => router.push("/fleet")} /><MenuRow icon="people-outline" label="Team management" detail="Users and permissions" /><MenuRow icon="help-circle-outline" label="Help & support" detail="FAQs and contact support" /></View><Button label="Sign out" variant="secondary" onPress={() => void signOut()} /></Screen>; }
-function MenuRow({ icon, label, detail, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; detail: string; onPress?: () => void }) { return <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}><View style={styles.rowIcon}><Ionicons name={icon} size={20} color={colors.brandDark} /></View><View style={styles.rowText}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.rowDetail}>{detail}</Text></View><Ionicons name="chevron-forward" size={18} color={colors.subtle} /></Pressable>; }
-const styles = StyleSheet.create({ eyebrow: { color: colors.brand, fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }, title: { fontSize: 30, lineHeight: 35, fontWeight: "900", color: colors.ink, letterSpacing: -0.7 }, profile: { minHeight: 138, flexDirection: "row", alignItems: "center", gap: 13, backgroundColor: colors.brand, padding: 19, borderRadius: 24, overflow: "hidden" }, heroGlow: { position: "absolute", width: 155, height: 155, borderRadius: 78, right: -35, top: -75, backgroundColor: "rgba(255,255,255,0.09)" }, avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(255,255,255,0.2)", borderWidth: 2, borderColor: "rgba(255,255,255,0.45)", alignItems: "center", justifyContent: "center" }, avatarText: { color: "#fff", fontWeight: "900" }, profileText: { flex: 1, gap: 4 }, name: { color: "#fff", fontSize: 17, fontWeight: "900" }, copy: { color: "rgba(255,255,255,0.75)", fontSize: 11, textTransform: "capitalize" }, activePill: { position: "absolute", left: 88, bottom: 18, flexDirection: "row", alignItems: "center", gap: 5 }, activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#A6F4C5" }, activeText: { color: "rgba(255,255,255,0.84)", fontSize: 10, fontWeight: "700" }, sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" }, menu: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, overflow: "hidden" }, row: { minHeight: 68, flexDirection: "row", alignItems: "center", gap: 11, paddingHorizontal: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }, rowIcon: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.brandPale, alignItems: "center", justifyContent: "center" }, rowText: { flex: 1, gap: 2 }, rowLabel: { color: colors.ink, fontWeight: "800", fontSize: 14 }, rowDetail: { color: colors.subtle, fontSize: 11 }, pressed: { opacity: 0.65 } });
+import { fonts } from "@/theme/fonts";
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+export default function MoreScreen() {
+  const { signOut } = useAuth();
+  const session = useMobileSession();
+  const identity = session.data?.user.fullName ?? session.data?.user.email ?? "Staff member";
+  return (
+    <Screen>
+      <LargeTitle title="More" />
+
+      <View style={styles.profile}>
+        <Avatar name={identity} size={56} />
+        <View style={styles.profileText}>
+          <Text style={styles.name} numberOfLines={1}>{identity}</Text>
+          <Text style={styles.copy} numberOfLines={1}>{session.data?.activeWorkspace.role} · {session.data?.activeWorkspace.name}</Text>
+        </View>
+      </View>
+
+      <View>
+        <GroupLabel>Operations</GroupLabel>
+        <Group inset={60}>
+          <MenuRow icon="car-sport-outline" label="Fleet" onPress={() => router.push("/fleet")} />
+          <MenuRow icon="card-outline" label="Transactions" onPress={() => router.push("/transactions")} />
+        </Group>
+      </View>
+
+      <View>
+        <GroupLabel>Workspace</GroupLabel>
+        <Group inset={60}>
+          <MenuRow icon="business-outline" label="Organization" onPress={() => router.push("/settings/organization")} />
+          <MenuRow icon="notifications-outline" label="Notifications" />
+          <MenuRow icon="people-outline" label="Team management" />
+        </Group>
+      </View>
+
+      <View>
+        <GroupLabel>Support</GroupLabel>
+        <Group inset={60}>
+          <MenuRow icon="help-circle-outline" label="Help and support" />
+        </Group>
+      </View>
+
+      <Group>
+        <Pressable accessibilityRole="button" onPress={() => void signOut()} style={({ pressed }) => [styles.signOut, pressed && styles.pressed]}>
+          <Text style={styles.signOutText}>Sign out</Text>
+        </Pressable>
+      </Group>
+    </Screen>
+  );
+}
+
+function MenuRow({ icon, label, onPress }: { icon: IconName; label: string; onPress?: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      <View style={styles.rowIcon}><Ionicons name={icon} size={18} color={colors.brand} /></View>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={15} color={colors.subtle} />
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  profile: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16 },
+  profileText: { flex: 1, gap: 2 },
+  name: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold },
+  copy: { color: colors.muted, fontSize: 14, textTransform: "capitalize" },
+  row: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, backgroundColor: colors.surface },
+  rowIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.brandSoft, alignItems: "center", justifyContent: "center" },
+  rowLabel: { flex: 1, color: colors.ink, fontSize: 16, fontFamily: fonts.medium },
+  signOut: { minHeight: 54, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface },
+  signOutText: { color: colors.danger, fontSize: 16, fontFamily: fonts.medium },
+  pressed: { opacity: 0.6 },
+});

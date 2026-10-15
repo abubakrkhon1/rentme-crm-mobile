@@ -12,7 +12,8 @@
     },
     "android": {
       "package": "com.rentmeorlando.crm",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "output": "static"
@@ -28,7 +29,8 @@
           "cameraPermission": "Allow RentMe CRM to take vehicle inspection photos."
         }
       ],
-      "expo-image"
+      "expo-image",
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true,

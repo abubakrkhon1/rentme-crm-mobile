@@ -1,12 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import { money, statusLabel, statusTone } from "@/components/fleet/VehicleCard";
+import { Group, GroupLabel } from "@/components/ui/Group";
+import { NavBar } from "@/components/ui/NavBar";
 import { Screen } from "@/components/ui/Screen";
 import { ErrorView, ScreenSkeleton } from "@/components/ui/StateView";
 import { useVehicle } from "@/features/fleet/useVehicle";
 import { colors } from "@/theme/colors";
+import { fonts } from "@/theme/fonts";
 
 export default function VehicleDetailScreen() {
   const { vehicleId } = useLocalSearchParams<{ vehicleId: string }>();
@@ -17,11 +20,47 @@ export default function VehicleDetailScreen() {
   if (!data) return <ErrorView message="Vehicle details were empty." />;
   const remoteImage = data.image?.startsWith("http") ? data.image : null;
   const tone = statusTone(data.status);
-  return <Screen><View style={styles.header}><Pressable style={styles.circleButton} onPress={() => router.back()}><Ionicons name="chevron-back" size={22} color={colors.ink} /></Pressable><View style={styles.headerText}><Text style={styles.eyebrow}>VEHICLE PROFILE</Text><Text style={styles.headerTitle}>Fleet</Text></View><View style={styles.circleButton}><Ionicons name="car-sport-outline" size={20} color={colors.brandDark} /></View></View><View style={styles.hero}><View style={styles.glow} />{remoteImage ? <Image source={{ uri: remoteImage }} style={styles.image} /> : <View style={styles.placeholder}><Ionicons name="car-sport" size={62} color="#fff" /></View>}<View style={[styles.status, { backgroundColor: tone.background }]}><View style={[styles.dot, { backgroundColor: tone.text }]} /><Text style={[styles.statusText, { color: tone.text }]}>{statusLabel(data.status)}</Text></View><Text style={styles.title}>{data.name}</Text><Text style={styles.plate}>{data.plateNumber ?? "No plate assigned"}</Text></View><View style={styles.rates}><Rate value={money(data.dailyRate)} label="Daily" /><Divider /><Rate value={money(data.weeklyRate)} label="Weekly" /><Divider /><Rate value={money(data.monthlyRate)} label="Monthly" /></View><Section title="Vehicle information"><Info icon="shield-checkmark-outline" label="Security deposit" value={money(data.securityDeposit)} /><Info icon="people-outline" label="Ride share" value={data.rideShareEnabled ? "Enabled" : "Disabled"} /><Info icon="speedometer-outline" label="Odometer" value={data.odometer == null ? "Not reported" : `${data.odometer.toLocaleString()} mi`} last /></Section><Section title="GPS & telemetry"><Info icon="navigate-outline" label="GPS status" value={data.gpsStatus ?? "Not connected"} /><Info icon="flash-outline" label="Ignition" value={data.ignitionOn == null ? "Unknown" : data.ignitionOn ? "On" : "Off"} /><Info icon="speedometer-outline" label="Current speed" value={data.speedMph == null ? "Unknown" : `${data.speedMph} mph`} /><Info icon="time-outline" label="Last update" value={formatDate(data.lastGpsUpdate)} last /></Section>{data.features.length > 0 && <View style={styles.section}><Text style={styles.sectionTitle}>Features</Text><View style={styles.featureWrap}>{data.features.map((feature) => <View key={feature} style={styles.feature}><Ionicons name="checkmark-circle" size={15} color={colors.brand} /><Text style={styles.featureText}>{feature}</Text></View>)}</View></View>}</Screen>;
+  return <Screen>
+    <NavBar backLabel="Fleet" />
+    <View style={styles.hero}>
+      {remoteImage ? <Image source={{ uri: remoteImage }} style={styles.image} /> : <View style={styles.placeholder}><Ionicons name="car-sport" size={56} color={colors.subtle} /></View>}
+      <View style={styles.heroText}>
+        <View style={styles.heroTop}><Text style={styles.title} numberOfLines={2}>{data.name}</Text><View style={[styles.status, { backgroundColor: tone.background }]}><View style={[styles.dot, { backgroundColor: tone.text }]} /><Text style={[styles.statusText, { color: tone.text }]}>{statusLabel(data.status)}</Text></View></View>
+        <Text style={styles.plate}>{data.plateNumber ?? "No plate assigned"}</Text>
+      </View>
+    </View>
+    <View style={styles.rates}><Rate value={money(data.dailyRate)} label="Daily" /><View style={styles.divider} /><Rate value={money(data.weeklyRate)} label="Weekly" /><View style={styles.divider} /><Rate value={money(data.monthlyRate)} label="Monthly" /></View>
+    <Section title="Vehicle information"><Info icon="shield-checkmark-outline" label="Security deposit" value={money(data.securityDeposit)} /><Info icon="people-outline" label="Ride share" value={data.rideShareEnabled ? "Enabled" : "Disabled"} /><Info icon="speedometer-outline" label="Odometer" value={data.odometer == null ? "Not reported" : `${data.odometer.toLocaleString()} mi`} /></Section>
+    <Section title="GPS & telemetry"><Info icon="navigate-outline" label="GPS status" value={data.gpsStatus ?? "Not connected"} /><Info icon="flash-outline" label="Ignition" value={data.ignitionOn == null ? "Unknown" : data.ignitionOn ? "On" : "Off"} /><Info icon="speedometer-outline" label="Current speed" value={data.speedMph == null ? "Unknown" : `${data.speedMph} mph`} /><Info icon="time-outline" label="Last update" value={formatDate(data.lastGpsUpdate)} /></Section>
+    {data.features.length > 0 && <View style={styles.section}><GroupLabel>Features</GroupLabel><View style={styles.featureWrap}>{data.features.map((feature) => <View key={feature} style={styles.feature}><Ionicons name="checkmark" size={14} color={colors.brand} /><Text style={styles.featureText}>{feature}</Text></View>)}</View></View>}
+  </Screen>;
 }
 function Rate({ value, label }: { value: string; label: string }) { return <View style={styles.rate}><Text style={styles.rateValue}>{value}</Text><Text style={styles.rateLabel}>{label}</Text></View>; }
-function Divider() { return <View style={styles.divider} />; }
-function Section({ title, children }: { title: string; children: React.ReactNode }) { return <View style={styles.section}><Text style={styles.sectionTitle}>{title}</Text><View style={styles.card}>{children}</View></View>; }
-function Info({ icon, label, value, last }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; last?: boolean }) { return <View style={[styles.info, !last && styles.infoBorder]}><View style={styles.infoIcon}><Ionicons name={icon} size={18} color={colors.brandDark} /></View><Text style={styles.infoLabel}>{label}</Text><Text style={styles.infoValue} numberOfLines={2}>{value}</Text></View>; }
+function Section({ title, children }: { title: string; children: React.ReactNode }) { return <View style={styles.section}><GroupLabel>{title}</GroupLabel><Group inset={56}>{children}</Group></View>; }
+function Info({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) { return <View style={styles.info}><View style={styles.infoIcon}><Ionicons name={icon} size={17} color={colors.brand} /></View><Text style={styles.infoLabel}>{label}</Text><Text style={styles.infoValue} numberOfLines={2}>{value}</Text></View>; }
 function formatDate(value: string | null) { if (!value) return "Never"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
-const styles = StyleSheet.create({ header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, circleButton: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }, headerText: { alignItems: "center" }, eyebrow: { color: colors.brand, fontSize: 9, fontWeight: "900", letterSpacing: 1.1 }, headerTitle: { color: colors.ink, fontSize: 22, fontWeight: "900" }, hero: { minHeight: 285, borderRadius: 24, backgroundColor: colors.brand, padding: 18, alignItems: "center", overflow: "hidden" }, glow: { position: "absolute", width: 220, height: 220, borderRadius: 110, right: -60, top: -90, backgroundColor: "rgba(255,255,255,0.09)" }, image: { width: "100%", height: 150, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)" }, placeholder: { width: "100%", height: 150, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.13)", alignItems: "center", justifyContent: "center" }, status: { marginTop: -13, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 }, dot: { width: 6, height: 6, borderRadius: 3 }, statusText: { fontSize: 10, fontWeight: "900" }, title: { color: "#fff", fontSize: 22, fontWeight: "900", marginTop: 9 }, plate: { color: "rgba(255,255,255,0.72)", fontSize: 11, marginTop: 3 }, rates: { minHeight: 78, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, flexDirection: "row", alignItems: "center" }, rate: { flex: 1, alignItems: "center", gap: 3 }, rateValue: { color: colors.ink, fontSize: 15, fontWeight: "900" }, rateLabel: { color: colors.muted, fontSize: 9, fontWeight: "700" }, divider: { width: StyleSheet.hairlineWidth, height: 31, backgroundColor: colors.border }, section: { gap: 10 }, sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" }, card: { backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }, info: { minHeight: 62, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", gap: 10 }, infoBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }, infoIcon: { width: 36, height: 36, borderRadius: 11, backgroundColor: colors.brandPale, alignItems: "center", justifyContent: "center" }, infoLabel: { flex: 1, color: colors.muted, fontSize: 11, fontWeight: "700" }, infoValue: { color: colors.ink, fontSize: 12, fontWeight: "800", maxWidth: "48%", textAlign: "right" }, featureWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, feature: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8 }, featureText: { color: colors.ink, fontSize: 11, fontWeight: "700" } });
+const styles = StyleSheet.create({
+  hero: { backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, borderRadius: 16, overflow: "hidden" },
+  image: { width: "100%", height: 180, backgroundColor: colors.neutralSoft },
+  placeholder: { width: "100%", height: 150, backgroundColor: colors.neutralSoft, alignItems: "center", justifyContent: "center" },
+  heroText: { padding: 16, gap: 4 },
+  heroTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  title: { flex: 1, color: colors.ink, fontSize: 22, fontFamily: fonts.bold },
+  plate: { color: colors.muted, fontSize: 14, fontFamily: fonts.medium },
+  status: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: 12, fontFamily: fonts.bold },
+  rates: { minHeight: 72, backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, borderRadius: 16, flexDirection: "row", alignItems: "center" },
+  rate: { flex: 1, alignItems: "center", gap: 2 },
+  rateValue: { color: colors.ink, fontSize: 18, fontFamily: fonts.bold },
+  rateLabel: { color: colors.muted, fontSize: 12, fontFamily: fonts.medium },
+  divider: { width: StyleSheet.hairlineWidth, height: 30, backgroundColor: colors.border },
+  section: { gap: 6 },
+  info: { minHeight: 52, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 12 },
+  infoIcon: { width: 28, height: 28, borderRadius: 7, backgroundColor: colors.brandSoft, alignItems: "center", justifyContent: "center" },
+  infoLabel: { flex: 1, color: colors.ink, fontSize: 16, fontFamily: fonts.medium },
+  infoValue: { color: colors.muted, fontSize: 15, maxWidth: "46%", textAlign: "right" },
+  featureWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  feature: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  featureText: { color: colors.ink, fontSize: 13, fontFamily: fonts.medium },
+});

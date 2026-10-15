@@ -34,11 +34,11 @@ export function Button({ label, loading, variant = "primary", disabled, ...props
 }
 
 const styles = StyleSheet.create({
-  base: { minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
+  base: { minHeight: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
   primary: { backgroundColor: colors.brand },
-  secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  primaryText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
-  secondaryText: { color: colors.brandDark, fontWeight: "700", fontSize: 16 },
+  secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: "#CBD0D8" },
+  primaryText: { color: "#FFFFFF", fontFamily: "AirbnbCereal-Bold", fontSize: 16 },
+  secondaryText: { color: colors.ink, fontFamily: "AirbnbCereal-Bold", fontSize: 16 },
   pressed: { opacity: 0.82 },
   disabled: { opacity: 0.5 },
 });
